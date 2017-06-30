@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+ 	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Soft Phone</title>
+	<link rel="stylesheet" type="text/css" href="/assets/styles/salesforce-lightning-design-system.css" />
+	<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+	<script src="https://ap.salesforce.com/support/api/37.0/interaction.js"></script>
+	<script src="https://media.twiliocdn.com/sdk/js/client/v1.3/twilio.min.js"></script>
+	<style>
+		.active-icon{
+			
+		}
+		.inactive-icon{
+			background: #d3caca;
+		}
+		.on-calling{
+			display: none;
+			z-index: 10;
+		}
+		.on-recieve{
+			display: none;
+			z-index: 10;
+			width :100%;
+			height: 100%;
+		}		
+		.on-waiting{
+			margin-bottom: 8px;
+		    margin-left: 7px;
+		}
+		.input-phone-number{
+			padding-left:15px;
+			padding-right: 30px; 			
+		}
+		#calling-msg{
+		    display: block;
+		    position: relative;
+		    top: 60%;
+		    font-size: 20px;
+		    font-weight: bold;
+		    text-align: center;
+		}
+		.calling-msg-on-push{
+		    display: block;
+		    position: relative;
+		    font-size: 20px;
+		    font-weight: bold;
+		    text-align: center;
+		    margin-top:15px;
+		}
+		.hide{
+			display: none;
+		}
+		.button-erea{
+			margin-left: 15px;
+		}
+		.number-button{
+			font-size: 30px;
+    		line-height: 50px;
+    		min-width: 51.5px;
+		}
+		.flex-container{
+		    display: flex;
+		    margin-bottom: 10px;
+		    margin-top: 25px;
+		    margin-left: 15px;
+		}
+		.flex-item{
+			align-content : center;
+			margin: 0px 5px;
+			position: relative;
+		}
+		.contents-base-margin{
+			margin-left: 4px;
+    		margin-bottom: 8px;
+		}
+		.tooltip-call-icon,
+		.tooltip-recieve-icon,
+		.tooltip-question-icon,
+		.tooltip-group-icon{
+				position: absolute;
+				top: -30px;
+				display: none;
+				width: 50px;			
+		}
+		.calling-timer{
+		    text-align: center;
+		    font-size: 40px;
+		    font-family: 'Droid Sans', sans-serif;
+		    margin-top: 10px;
+		    display: flex;
+		    margin-left: 30px;
+		}
+		.recive-icon-wrap{
+		    top: 40%;
+		    left: 40%;
+		    position: relative;
+		}
+		.dislay-phone-number{
+		}
+		.hungup-button{
+			top: 150px;
+			position: relative;
+		}
+		.wrapper-props{
+			height: 340px;
+			width: 100%;
+			position: relative;
+		}
+		.dialog-content{
+			height: 70%;
+		}
+		.callitimerng-timer{
+			font-size: 25px;
+		    display: block;
+		    font-size: 25px;
+		    position: relative;
+		    margin-left: 40px;
+		    margin-top: 15px;			
+		}
+	</style>
+	<script type="text/javascript">
+		var CC = {};
+		CC.state = {
+			hour:0,
+			min : 0,
+			sec :0,
+			timerId :""
+		};
+
+		var click2DialCallBack = function(res){
+			 if (res.result) {
+			 	console.log('クリック-to-ダイヤル有効化完了');
+			 }
+		};
+
+        var input_phone_number = document.querySelector('#input-phone-number') ? document.querySelector('#input-phone-number').value : "";
+
+       var onClickToDialListener = function (response) {
+       		var phoneNumber = JSON.parse(response.result).number;
+	    	var params = {"phoneNumber": phoneNumber};
+	    	if(phoneNumber) $('.dislay-phone-number').text(phoneNumber);
+	    	if(phoneNumber) $('#input-phone-number').val(phoneNumber);
+	        Twilio.Device.connect(params);
+
+        };
+ 		
+        var incomingSeachCallBack = function(res){
+        	var searchId;
+        	console.log('incomingSeachCallBack:'+JSON.stringify(res));
+        	if(res.result){
+        		searchId = '/'+Object.keys(res.result)[0];
+        		sforce.interaction.screenPop(searchId ,'');
+        	};
+
+        };
+
+		window.onload = function() {
+			//クリック-to-ダイヤル有効化
+			sforce.interaction.cti.enableClickToDial(click2DialCallBack);
+			sforce.interaction.cti.onClickToDial(onClickToDialListener);
+
+			Array.prototype.forEach.call(document.querySelectorAll('.number-button'),function (item) {
+				item.addEventListener('click',function (event) {
+           			var phone_number = String(document.querySelector('#input-phone-number').value) + String(event.target.innerText);
+           			document.querySelector('#input-phone-number').value = phone_number;	
+
+				});	
+			});
+
+			document.querySelector('.slds-icon-action-call').addEventListener('mouseover',function (event) {
+				document.querySelector('.tooltip-call-icon').style.display = "inherit";
+
+			});
+
+			document.querySelector('.slds-icon-action-call').addEventListener('mouseout',function (event) {
+				document.querySelector('.tooltip-call-icon').style.display = "none";
+			});
+
+			document.querySelector('.slds-icon-action-question-post-action').addEventListener('mouseover',function (event) {
+				document.querySelector('.tooltip-question-icon').style.display = "inherit";
+			});
+			document.querySelector('.slds-icon-action-question-post-action').addEventListener('mouseout',function (event) {
+
+				document.querySelector('.tooltip-question-icon').style.display = "none";
+			});
+
+			document.querySelector('.slds-icon-action-new-child-case').addEventListener('mouseover',function (event) {
+				document.querySelector('.tooltip-group-icon').style.display = "inherit";
+			});
+			document.querySelector('.slds-icon-action-new-child-case').addEventListener('mouseout',function (event) {
+
+				document.querySelector('.tooltip-group-icon').style.display = "none";
+			});
+		};
+
+		/*
+		    //var socket = io.connect('/');	    
+			// submit chat message
+		    $('#form-chat').submit(function(){
+		        socket.emit('chat message', $('#mes').val());
+		        $('#mes').val('');
+		        return false;
+		    });
+		    // submit username
+		    $('#form-popup').submit(function(){
+		        // display none
+		        $('#popup').css({'display':'none'});
+		        $('#black-overlay').css({'display':'none'});
+		        // socket connection
+		        var username = $('#username').val();
+		        socket.emit('show username', username);
+		        $('#username').val('');
+		        return false;
+		    });
+		    */
+			/*	    
+			socket.on('connect', function(){
+		        // show user name
+				socket.on('sousin', function(data) {
+				　　alert(data);
+				});
+		    });
+
+		        // prepend message li
+		    socket.on('chat message', function(msg){
+		        $('#messages').prepend($('<li>').text(msg));
+		    });
+		    // show user name
+		    socket.on('show username', function(username){
+		        $('#form-header').empty().append($('<h4>').text(username + ' has joined!'));
+		    });
+	    */
+
+		$(function () {
+		 
+		    function init() {
+		        //トークン取得
+		        $.ajax({
+		            type: "POST",
+		            scriptCharset: 'utf-8',
+		            dataType: 'json',
+		            url: "/create_token",
+		            success: function (res) {
+		            	console.log('token:'+JSON.stringify(res));
+		                Twilio.Device.setup(res.token, {debug: true});
+		            },
+		            error: function (err) {
+		                console.log(err);
+		            }
+		        });
+		    }
+		 
+		    Twilio.Device.ready(function (device) {
+		        $("#log").text("Ready");
+		    });
+		    Twilio.Device.error(function (error) {
+		        $("#log").text("Error: " + error.message);
+		    });
+		 
+		    //接続
+		    Twilio.Device.connect(function (conn) {
+		    	var phoneNumber;
+		    	console.log('Twilio.Device.connect start');
+		        console.log('message:'+JSON.stringify(conn.message));
+		        console.log('parameters:'+JSON.stringify(conn.parameters));
+		        $('.on-calling').css('display','block');
+		    	$('.on-recieve').css('display','none');
+		    	$('.on-waiting').css('display','none');
+	    		//発信時の画面	
+	    		if(conn.message.phoneNumber || $("#input-phone-number").val()){
+	    			phoneNumber =　conn.message.phoneNumber || $("#input-phone-number").val();
+	    			$('.dislay-phone-number').text(phoneNumber);
+	    			$('#calling-type-msg').text('発信中...');
+	    			$('.callitimerng-timer').css('display','none');
+		    	//着信時の画面    			
+	    		} else {
+	    			phoneNumber = conn.parameters.From;
+	    			$('.dislay-phone-number').text(phoneNumber);
+	    			$('#calling-type-msg').text('通話中...');
+		    		//通話時間計測開始
+		    		$('.callitimerng-timer').css('display','block');
+		    		CC.state.timerId = setInterval(function(){
+			    			if(CC.state.sec === 59){
+			    				CC.state.sec = 0;
+			    				CC.state.min ++;
+			    			} else {
+			    				CC.state.sec++;
+			    			};
+			    			var hour = "00";
+			    			var min = CC.state.min < 10 ? "0" + String(CC.state.min) :  CC.state.min;
+			    			var sec = CC.state.sec < 10 ? "0" + String(CC.state.sec) :  CC.state.sec;
+
+			    			$('.timer-hour').text(hour);
+			    			$('.timer-min').text(min);
+			    			$('.timer-sec').text(sec);
+		    			},1000);
+
+		    		sforce.interaction.searchAndScreenPop(conn.parameters.From,'','inbound',incomingSeachCallBack);
+	    		}
+	    
+		    });
+		 
+		    //通話終了
+		    Twilio.Device.disconnect(function (conn) {
+		    	console.dir('Twilio.Device.disconnect');
+		        console.log('message:'+JSON.stringify(conn.message));
+		        console.log('parameters:'+JSON.stringify(conn.parameters));	
+		        clearInterval(CC.state.timerId);
+		        CC.state.hour = 0;
+		        CC.state.min = 0;
+		        CC.state.sec = 0;
+
+		        $("#log").css('background','grey');
+		        $('.on-calling').css('display','none');
+	    		$('.on-waiting').css('display','');
+		    });
+		 
+		    //着信時
+		    Twilio.Device.incoming(function (conn) {
+		        var phoneNumber = conn.parameters.From;
+		        $('.dislay-phone-number').text(phoneNumber);
+		        $('.on-recieve').css('display','block');
+		        $('.on-waiting').css('display','none');
+		        
+			    $("#recieve").click(function() {
+			 		conn.accept();
+			 	});
+
+		    });
+		    //キャンセルイベント発生時
+		 	Twilio.Device.cancel(function (conn) {
+		 		console.log('twillio cancel event ');
+		 		 $('.on-recieve').css('display','none');
+		 		 $('.on-waiting').css('display','');
+		 		 Twilio.Device.disconnectAll();
+		 	});
+		    //通話ボタン
+		    $("#call").click(function () {
+		    	console.log('電話番号:'+$("#input-phone-number").val());
+		    	var params = {"phoneNumber": $("#input-phone-number").val()};
+		        Twilio.Device.connect(params);
+		    });
+		 
+		    //通話ボタン
+		    $("#hangup").click(function () {
+		        //通話終了
+		        Twilio.Device.disconnectAll();
+		    });
+
+		    //初期化実行
+		    init();
+		});
+	</script>
+</head>
+<body>
+	<div class="slds-wrap wrapper-props">
+
+		<div class="on-waiting">
+			<div class="flex-container">
+				<div class="flex-item">
+					<div class="slds-popover slds-popover--tooltip slds-nubbin--bottom tooltip-call-icon" role="tooltip">
+	  					<div class="slds-popover__body">発信</div>
+					</div>
+					<span id="call" class="slds-icon_container slds-icon-action-call slds-icon_container--circle active-icon">
+						<svg aria-hidden="true" class="slds-icon slds-icon--small">
+							<use 
+								xmlns:xlink="http://www.w3.org/1999/xlink" 
+								xlink:href="/assets/icons/action-sprite/svg/symbols.svg#call">
+							</use>
+						</svg>
+					</span>
+				</div>
+				<div class="flex-item">
+					<div class="slds-popover slds-popover--tooltip slds-nubbin--bottom tooltip-question-icon" role="tooltip">
+	  					<div class="slds-popover__body">質問</div>
+					</div>			
+					<span class="slds-icon_container slds-icon-action-question-post-action slds-icon_container--circle inactive-icon">
+						<svg aria-hidden="true" class="slds-icon slds-icon--small">
+							<use 
+								xmlns:xlink="http://www.w3.org/1999/xlink" 
+								xlink:href="/assets/icons/action-sprite/svg/symbols.svg#question_post_action">
+							</use>
+						</svg>
+					</span>
+				</div>
+				<div class="flex-item">
+					<div class="slds-popover slds-popover--tooltip slds-nubbin--bottom tooltip-group-icon active-icon" role="tooltip">
+	  					<div class="slds-popover__body">内線</div>
+					</div>			
+					<span class="slds-icon_container slds-icon-action-new-child-case slds-icon_container--circle inactive-icon">
+						<svg aria-hidden="true" class="slds-icon slds-icon--small">
+							<use 
+								xmlns:xlink="http://www.w3.org/1999/xlink" 
+								xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#groups">
+							</use>
+						</svg>
+					</span>
+				</div>
+			</div>
+			<div class="slds-form-element contents-base-margin input-phone-number">
+				<div class="slds-form-element__control">
+					<input id="input-phone-number" class="slds-input" type="text" placeholder="電話番号入力" value=""></input>
+				</div>
+			</div>
+			<div class="slds-spinner_container on-calling">
+				<div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+					<div class="slds-spinner__dot-a"></div>
+					<div class="slds-spinner__dot-b"></div>
+				</div>
+			</div>
+			<div class="button-erea">
+				<div class="slds-button-group" role="group" style="margin-left: 0.25rem;">
+					<button class="slds-button slds-button--neutral number-button">1</button>
+					<button class="slds-button slds-button--neutral number-button">2</button>
+					<button class="slds-button slds-button--neutral number-button">3</button>
+				</div>
+				<div class="slds-button-group" role="group">
+					<button class="slds-button slds-button--neutral number-button">4</button>
+					<button class="slds-button slds-button--neutral number-button">5</button>
+					<button class="slds-button slds-button--neutral number-button">6</button>	
+				</div>
+				<div class="slds-button-group" role="group">
+					<button class="slds-button slds-button--neutral number-button">7</button>
+					<button class="slds-button slds-button--neutral number-button">8</button>
+					<button class="slds-button slds-button--neutral number-button">9</button>	
+				</div>
+				<div class="slds-button-group" role="group">
+					<button class="slds-button slds-button--neutral number-button">+</button>
+					<button class="slds-button slds-button--neutral number-button">0</button>
+					<button class="slds-button slds-button--neutral number-button">-</button>	
+				</div>			
+			</div>
+		</div>
+			
+		<div class="slds-spinner_container on-calling" style="height: 100%">
+			<div class="slds-spinner--brand slds-spinner slds-spinner--large" aria-hidden="false" role="alert">
+				<div class="slds-spinner__dot-a"></div>
+				<div class="slds-spinner__dot-b"></div>
+			</div>
+			<div class="callitimerng-timer">
+				<span class="timer-hour"></span>
+				<span class="timer-colom">：</span>
+				<span class="timer-min"></span>
+				<span class="timer-colom">：</span>
+				<span class="timer-sec"></span>
+			</div>
+			<div class="calling-msg-on-push">
+				<div class="dislay-phone-number"> </div>
+				<div id="calling-type-msg">へ発信中...</div>
+			</div>
+			<div class="slds-docked-composer__footer slds-shrink-none hungup-button">
+	 			<button id="hangup" class="slds-button slds-button--destructive slds-size--1-of-1">通話終了</button>
+			</div>	
+		</div>
+
+		<div role="dialog" aria-labelledby="dialog-heading-id" class="slds-docked-composer slds-grid slds-grid--vertical slds-nowrap slds-is-open on-recieve" style="height: 100%;">
+		  <header class="slds-docked-composer__header slds-grid slds-grid--align-spread slds-shrink-none">
+		    <div class="slds-media slds-media--center">
+		      <div class="slds-media__figure">
+		        <span class="slds-icon_container slds-icon-standard-call">
+		          <svg aria-hidden="true" class="slds-icon slds-icon--small">
+		            <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#call"></use>
+		          </svg>
+		          <span class="slds-assistive-text">Call Icon</span>
+		        </span>
+		      </div>
+		      <div class="slds-media__body">
+		        <h2 id="dialog-heading-id" aria-live="polite" aria-atomic="true">着信中...</h2>
+		      </div>
+		    </div>
+		    <div class="slds-docked-composer__actions">
+		      <button class="slds-button slds-button--icon-bare slds-button--icon-inverse">
+		        <svg aria-hidden="true" class="slds-button__icon">
+		          <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#minimize_window"></use>
+		        </svg>
+		        <span class="slds-assistive-text">Minimize window</span>
+		      </button>
+		      <button class="slds-button slds-button--icon-bare slds-button--icon-inverse">
+		        <svg aria-hidden="true" class="slds-button__icon">
+		          <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#expand_alt"></use>
+		        </svg>
+		        <span class="slds-assistive-text">Expand Composer</span>
+		      </button>
+		      <button class="slds-button slds-button--icon-bare slds-button--icon-inverse">
+		        <svg aria-hidden="true" class="slds-button__icon">
+		          <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+		        </svg>
+		        <span class="slds-assistive-text">Close</span>
+		      </button>
+		    </div>
+		  </header>
+		  <div class="slds-docked-composer__body slds-col slds-grid slds-grid--vertical slds-nowrap slds-grid--align-center dialog-content">
+		    <div class="slds-text-align--center slds-scrollable--y">
+		      <span class="slds-avatar slds-avatar--large">
+		        <img src="/assets/images/avatar2.jpg" alt="Lei Chan" />
+		      </span>
+		      <h3 class="slds-text-heading--large dislay-phone-number" style="font-size: 25px; padding-top: 20px;padding-bottom: 10px;"></h3>
+		      <ul class="slds-list--horizontal slds-grid--align-center slds-has-dividers--right slds-text-body--small">
+		        <li class="slds-item "></li>
+		      </ul>
+		      <p class="slds-text-heading--medium slds-m-top--medium">着信中...</p>
+		    </div>
+		  </div>
+		  <footer class="slds-docked-composer__footer slds-shrink-none">
+		    <button id="recieve" class="slds-button slds-button--brand slds-size--1-of-1 recieve">受信</button>
+		  </footer>
+		</div>			
+	</div>
+</body>
+</html>
