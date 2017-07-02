@@ -146,17 +146,17 @@
 	        Twilio.Device.connect(params);
 
         };
- 		
-        var incomingSeachCallBack = function(res){
-        	var searchId;
-        	console.log('incomingSeachCallBack:'+JSON.stringify(res));
-        	if(res.result){
-        		searchId = '/'+Object.keys(res.result)[0];
-        		sforce.interaction.screenPop(searchId ,'');
-        	};
+ 		/**
+			var incomingSeachCallBack = function(res){
+				var searchId;
+				console.log('incomingSeachCallBack:'+JSON.stringify(res));
+				if(res.result){
+					searchId = '/'+Object.keys(res.result)[0];
+					sforce.interaction.screenPop(searchId);
+				};
 
-        };
-
+			};
+		**/
 		window.onload = function() {
 			//クリック-to-ダイヤル有効化
 			sforce.interaction.cti.enableClickToDial(click2DialCallBack);
@@ -298,7 +298,7 @@
 			    			$('.timer-sec').text(sec);
 		    			},1000);
 
-		    		sforce.interaction.searchAndScreenPop(conn.parameters.From,'','inbound',incomingSeachCallBack);
+		    		sforce.interaction.searchAndScreenPop(conn.parameters.From,'','inbound');
 	    		}
 	    
 		    });

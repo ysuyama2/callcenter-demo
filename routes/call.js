@@ -35,6 +35,8 @@ router.post('/recieve',twilio.webhook({validate: false}), function(req, res, nex
 	//console.log('req.body:'+util.inspect(req.body));
 	//console.log('req:'+util.inspect(req));
 
+	var actionUrl = process.env.APP_BASE_URL + '/call/recieve/select_menu';
+
   	var clientDialer = function(dial) {
      	dial.client("support_agent");
   	};
@@ -45,7 +47,7 @@ router.post('/recieve',twilio.webhook({validate: false}), function(req, res, nex
 
     twiml.say('こちらは、テラスコです。', opt)
     	 .gather({
-    	 	action: 'https://callcenter-demo.herokuapp.com/call/recieve/select_menu',
+    	 	action: actionUrl,
     	 	method: 'GET',
     	 	timeout:20
     	 },function () {
