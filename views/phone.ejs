@@ -132,7 +132,7 @@
 
 		var click2DialCallBack = function(res){
 			 if (res.result) {
-			 	console.log('クリック-to-ダイヤル有効化完了');
+			 	console.log('Click-to-Dial Activated');
 			 }
 		};
 
@@ -273,13 +273,15 @@
 	    		if(conn.message.phoneNumber || $("#input-phone-number").val()){
 	    			phoneNumber =　conn.message.phoneNumber || $("#input-phone-number").val();
 	    			$('.dislay-phone-number').text(phoneNumber);
-	    			$('#calling-type-msg').text('発信中...');
+	    			//$('#calling-type-msg').text('発信中...');
+	    			$('#calling-type-msg').text('Calling...');
 	    			$('.callitimerng-timer').css('display','none');
 		    	//着信時の画面    			
 	    		} else {
 	    			phoneNumber = conn.parameters.From;
 	    			$('.dislay-phone-number').text(phoneNumber);
-	    			$('#calling-type-msg').text('通話中...');
+	    			//$('#calling-type-msg').text('通話中...');
+	    			$('#calling-type-msg').text('Talking...');
 		    		//通話時間計測開始
 		    		$('.callitimerng-timer').css('display','block');
 		    		CC.state.timerId = setInterval(function(){
@@ -339,7 +341,8 @@
 		 	});
 		    //通話ボタン
 		    $("#call").click(function () {
-		    	console.log('電話番号:'+$("#input-phone-number").val());
+		    	//console.log('電話番号:'+$("#input-phone-number").val());
+		    	console.log('Phone Number:'+$("#input-phone-number").val());
 		    	var params = {"phoneNumber": $("#input-phone-number").val()};
 		        Twilio.Device.connect(params);
 		    });
@@ -362,7 +365,8 @@
 			<div class="flex-container">
 				<div class="flex-item">
 					<div class="slds-popover slds-popover--tooltip slds-nubbin--bottom tooltip-call-icon" role="tooltip">
-	  					<div class="slds-popover__body">発信</div>
+	  					<!-- <div class="slds-popover__body">発信</div>-->
+	  					<div class="slds-popover__body">Call</div>
 					</div>
 					<span id="call" class="slds-icon_container slds-icon-action-call slds-icon_container--circle active-icon">
 						<svg aria-hidden="true" class="slds-icon slds-icon--small">
@@ -375,7 +379,8 @@
 				</div>
 				<div class="flex-item">
 					<div class="slds-popover slds-popover--tooltip slds-nubbin--bottom tooltip-question-icon" role="tooltip">
-	  					<div class="slds-popover__body">質問</div>
+	  					<!-- <div class="slds-popover__body">質問</div> -->
+	  					<div class="slds-popover__body">Question</div>
 					</div>			
 					<span class="slds-icon_container slds-icon-action-question-post-action slds-icon_container--circle inactive-icon">
 						<svg aria-hidden="true" class="slds-icon slds-icon--small">
@@ -388,7 +393,8 @@
 				</div>
 				<div class="flex-item">
 					<div class="slds-popover slds-popover--tooltip slds-nubbin--bottom tooltip-group-icon active-icon" role="tooltip">
-	  					<div class="slds-popover__body">内線</div>
+	  					<!-- <div class="slds-popover__body">内線</div> -->
+	  					<div class="slds-popover__body">Extention</div>
 					</div>			
 					<span class="slds-icon_container slds-icon-action-new-child-case slds-icon_container--circle inactive-icon">
 						<svg aria-hidden="true" class="slds-icon slds-icon--small">
@@ -402,7 +408,8 @@
 			</div>
 			<div class="slds-form-element contents-base-margin input-phone-number">
 				<div class="slds-form-element__control">
-					<input id="input-phone-number" class="slds-input" type="text" placeholder="電話番号入力" value=""></input>
+					<!-- <input id="input-phone-number" class="slds-input" type="text" placeholder="電話番号入力" value=""></input> -->
+					<input id="input-phone-number" class="slds-input" type="text" placeholder="Input Phone Number" value=""></input>
 				</div>
 			</div>
 			<div class="slds-spinner_container on-calling">
@@ -449,10 +456,12 @@
 			</div>
 			<div class="calling-msg-on-push">
 				<div class="dislay-phone-number"> </div>
-				<div id="calling-type-msg">へ発信中...</div>
+				<!-- <div id="calling-type-msg">へ発信中...</div> -->
+				<div id="calling-type-msg">へCalling...</div>
 			</div>
 			<div class="slds-docked-composer__footer slds-shrink-none hungup-button">
-	 			<button id="hangup" class="slds-button slds-button--destructive slds-size--1-of-1">通話終了</button>
+	 			<!-- <button id="hangup" class="slds-button slds-button--destructive slds-size--1-of-1">通話終了</button>  -->
+	 			<button id="hangup" class="slds-button slds-button--destructive slds-size--1-of-1">End of call</button>
 			</div>	
 		</div>
 
@@ -468,7 +477,8 @@
 		        </span>
 		      </div>
 		      <div class="slds-media__body">
-		        <h2 id="dialog-heading-id" aria-live="polite" aria-atomic="true">着信中...</h2>
+		        <!-- <h2 id="dialog-heading-id" aria-live="polite" aria-atomic="true">着信中...</h2> -->
+		        <h2 id="dialog-heading-id" aria-live="polite" aria-atomic="true">Incoming call...</h2>
 		      </div>
 		    </div>
 		    <div class="slds-docked-composer__actions">
@@ -501,7 +511,8 @@
 		      <ul class="slds-list--horizontal slds-grid--align-center slds-has-dividers--right slds-text-body--small">
 		        <li class="slds-item "></li>
 		      </ul>
-		      <p class="slds-text-heading--medium slds-m-top--medium">着信中...</p>
+		      <!-- <p class="slds-text-heading--medium slds-m-top--medium">着信中...</p> -->
+		      <p class="slds-text-heading--medium slds-m-top--medium">Incoming call...</p>
 		    </div>
 		  </div>
 		  <footer class="slds-docked-composer__footer slds-shrink-none">
